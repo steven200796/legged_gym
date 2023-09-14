@@ -38,7 +38,6 @@ from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Log
 import numpy as np
 import torch
 
-
 def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
@@ -74,11 +73,14 @@ def play(args):
     camera_direction = np.array(env_cfg.viewer.lookat) - np.array(env_cfg.viewer.pos)
     img_idx = 0
 
+    if RECORD_FRAMES:
+        delete_files(os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'frames'))
+
     for i in range(10*int(env.max_episode_length)):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
         if RECORD_FRAMES:
-            if i % 2:
+            if i%2:
                 filename = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'frames', f"{img_idx}.png")
                 env.gym.write_viewer_image_to_file(env.viewer, filename)
                 img_idx += 1 
@@ -112,6 +114,57 @@ def play(args):
                     logger.log_rewards(infos["episode"], num_episodes)
         elif i==stop_rew_log:
             logger.print_rewards()
+        if RECORD_FRAMES and i == 150:
+            create_video_from_images(os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'frames'), 'output.mp4')
+            print("Saved video")
+
+
+import cv2
+import os
+def delete_files(directory_path):
+    try:
+        # List all files in the directory
+        file_list = os.listdir(directory_path)
+        
+        # Iterate through the files and delete them
+        for file_name in file_list:
+            file_path = os.path.join(directory_path, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+                print(f"Deleted: {file_path}")
+        
+        print("All files deleted successfully.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+def get_creation_time(file_path):
+    return os.path.getctime(file_path)
+def sort_files_by_created_time(directory):
+    # Get a list of all files in the directory
+    file_list = os.listdir(directory)
+
+    # Create a list of tuples, each containing the file name and its creation time
+    file_with_creation_times = [(file, get_creation_time(os.path.join(directory, file))) for file in file_list]
+
+    # Sort the list based on the creation time (second element of the tuple)
+    sorted_files = sorted(file_with_creation_times, key=lambda x: x[1])
+
+    # Extract only the file names from the sorted list
+    sorted_file_names = [file[0] for file in sorted_files]
+
+    return sorted_file_names
+
+def create_video_from_images(image_dir, output_path, frame_rate=25):
+    images = sort_files_by_created_time(image_dir)
+
+    frame = cv2.imread(os.path.join(image_dir, images[0]))
+    height, width, layers = frame.shape
+
+    video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'mp4v'), frame_rate, (width, height))
+    for img in images:
+        video.write(cv2.imread(os.path.join(image_dir,img)))
+
+    cv2.destroyAllWindows()
+    video.release()
 
 if __name__ == '__main__':
     EXPORT_POLICY = True
