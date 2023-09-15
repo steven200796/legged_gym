@@ -68,7 +68,7 @@ class NaoCfg( LeggedRobotCfg ):
                                 'LAnkleRoll': 0.0,
                                 }
     class terrain( LeggedRobotCfg.terrain):
-        mesh_type = 'plane'
+#        mesh_type = 'plane'
         measure_heights= False
 
     class control( LeggedRobotCfg.control ):
