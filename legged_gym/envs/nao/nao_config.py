@@ -33,9 +33,9 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class NaoCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
         num_envs = 4096
-        num_actions = 26
+        num_actions = 22
         # TODO This is hardcoded for now but should be inferred
-        num_observations = 277
+        num_observations = 78
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.32] # x,y,z [m]
         use_halfway = True
@@ -47,15 +47,11 @@ class NaoCfg( LeggedRobotCfg ):
                                 'LShoulderRoll': 0.1,
                                 'LElbowYaw': -1.396,
                                 'LElbowRoll': -0.1,
-                                'LWristYaw': 0.0,
-                                'LHand': 0.0,
-                                'RHand': 0.0,
 
                                 'RShoulderPitch': 1.396,
                                 'RShoulderRoll': -0.1,
                                 'RElbowYaw': 1.396,
                                 'RElbowRoll': 0.1,
-                                'RWristYaw': 0.0,
 
                                 'RHipYawPitch': 0.0,
                                 'RHipRoll': 0.0,
@@ -71,41 +67,9 @@ class NaoCfg( LeggedRobotCfg ):
                                 'LAnklePitch': 0.349,
                                 'LAnkleRoll': 0.0,
                                 }
-        x="""
-                                'LFinger11': 0.0,
-                                'LFinger12': 0.0,
-                                'LFinger13': 0.0,
-                                'LFinger21': 0.0,
-                                'LFinger22': 0.0,
-                                'LFinger23': 0.0,
-                                'LThumb1': 0.0,
-                                'LThumb2': 0.0,
-
-                                'RFinger11': 0.0,
-                                'RFinger12': 0.0,
-                                'RFinger13': 0.0,
-                                'RFinger21': 0.0,
-                                'RFinger22': 0.0,
-                                'RFinger23': 0.0,
-                                'RThumb1': 0.0,
-                                'RThumb2': 0,
-                                """
-        y =                                 """
-                                'HeadYaw': 0.75,
-                                'HeadPitch': 2.6,
-                                'HipYawPitch': 3.6,
-                                'HipRoll':5.8,
-                                'HipPitch':3.0,
-                                'KneePitch':2.8,
-                                'AnklePitch':2.9,
-                                'AnkleRoll':5.9,
-                                'ShoulderPitch':0.65,
-                                'ShoulderRoll':2.2,
-                                'ElbowYaw':0.75,
-                                'ElbowRoll':2.1,
-                                'Finger': 0.,
-                                'Thumb': 0.,
-                                """
+    class terrain( LeggedRobotCfg.terrain):
+        mesh_type = 'plane'
+        measure_heights= False
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -128,15 +92,13 @@ class NaoCfg( LeggedRobotCfg ):
 
         #joint: 10
         damping = {'joint': 0.1, "Finger": 0., "Thumb": 0.}     # [N*m*s/rad]
-        #joint 0.25
 
         # action scale: target angle = actionScale * action + defaultAngle
-        action_scale = .1
-        #action_scale = 0.1
+        action_scale = .3
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
 
-    class noise:
+    class noise ( LeggedRobotCfg.noise ):
         add_noise = True
         noise_level = 1.0 # scales other values
         class noise_scales:
@@ -154,23 +116,17 @@ class NaoCfg( LeggedRobotCfg ):
 #        penalize_contacts_on = ["Knee", "Elbow"]
         terminate_after_contacts_on = ['Hip', 'Thigh', 'Shoulder', 'Pelvis', 'Head', 'Finger', 'Elbow', 'Knee', 'Thumb', 'ForeArm', 'Tibia', 'Bicep', 'Neck', 'gripper', 'Bumper', 'Hand', 'Chest']
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
-    class commands:
+    class commands (LeggedRobotCfg.commands):
         curriculum = True
         max_curriculum = 4.
         num_commands = 4 # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
-        resampling_time = 20. # time before command are changed[s]
+        resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
-        class ranges:
-            lin_vel_x = [-0.35, 0.35] # min max [m/s]
-            lin_vel_y = [-0.5, 0.5]   # min max [m/s]
-            ang_vel_yaw = [-0.5, 0.5]    # min max [rad/s]
-            heading = [-3.14, 3.14]
-            """
-            lin_vel_x = [-0.35, 0.35] # min max [m/s]
+        class ranges (LeggedRobotCfg.commands.ranges):
+            lin_vel_x = [2.5, 3.5] # min max [m/s]
             lin_vel_y = [-0.1, 0.1]   # min max [m/s]
             ang_vel_yaw = [-0.1, 0.1]    # min max [rad/s]
             heading = [-3.14, 3.14]
-            """
 
     class rewards(LeggedRobotCfg.rewards):
         soft_dof_pos_limit = 1.0
@@ -182,7 +138,7 @@ class NaoCfg( LeggedRobotCfg ):
         class scales( LeggedRobotCfg.rewards.scales ):
 #            termination = -200.
             tracking_lin_vel = 1.0
-            tracking_ang_vel = 0.5
+            tracking_ang_vel = 0.2
             torques = -5.e-6
             dof_acc = 0.
             lin_vel_z = 0.
@@ -219,7 +175,7 @@ class NaoCfg( LeggedRobotCfg ):
             action_rate = 0.
             """
 
-    class domain_rand:
+    class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
         friction_range = [0.5, 1.25]
         randomize_base_mass = False

@@ -510,7 +510,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
   </link>
-  <joint name="LWristYaw" type="fixed">
+  <joint name="LWristYaw" type="revolute">
     <parent link="LForeArm"/>
     <child link="l_wrist"/>
     <origin rpy="0 0 0" xyz="0.05595 0 0"/>
@@ -536,7 +536,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
   </link>
-  <joint name="LHand" type="fixed"> 
+  <joint name="LHand" type="revolute">
     <parent link="l_wrist"/>
     <child link="l_gripper"/>
     <origin rpy="0 0 0" xyz="0.05775 0 -0.01231"/>
@@ -641,7 +641,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
   </link>
-  <joint name="RWristYaw" type="fixed">
+  <joint name="RWristYaw" type="revolute">
     <parent link="RForeArm"/>
     <child link="r_wrist"/>
     <origin rpy="0 0 0" xyz="0.05595 0 0"/>
@@ -667,7 +667,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
     </collision>
   </link>
-  <joint name="RHand" type="fixed">
+  <joint name="RHand" type="revolute">
     <parent link="r_wrist"/>
     <child link="r_gripper"/>
     <origin rpy="0 0 0" xyz="0.05775 0 -0.01213"/>
