@@ -36,6 +36,7 @@ class NaoCfg( LeggedRobotCfg ):
         num_actions = 22
         # TODO This is hardcoded for now but should be inferred
         num_observations = 78
+        episode_length_s = 20
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.32] # x,y,z [m]
         use_halfway = True
@@ -68,7 +69,7 @@ class NaoCfg( LeggedRobotCfg ):
                                 'LAnkleRoll': 0.0,
                                 }
     class terrain( LeggedRobotCfg.terrain):
-#        mesh_type = 'plane'
+        mesh_type = 'plane'
         measure_heights= False
 
     class control( LeggedRobotCfg.control ):
@@ -88,13 +89,14 @@ class NaoCfg( LeggedRobotCfg ):
                                 'ElbowRoll':2.1,
                                 'Finger': 0.,
                                 'Thumb': 0.,""":None,
-                'joint': 10.}  # [N*m/rad]
+#                     'KneePitch': 25,
+                     'joint': 10.}  # [N*m/rad]
 
         #joint: 10
         damping = {'joint': 0.1, "Finger": 0., "Thumb": 0.}     # [N*m*s/rad]
 
         # action scale: target angle = actionScale * action + defaultAngle
-        action_scale = .3
+        action_scale = 0.3
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
 
@@ -123,10 +125,14 @@ class NaoCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges (LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [2.5, 3.5] # min max [m/s]
+            lin_vel_x = [0.0, 0.5] # min max [m/s]
             lin_vel_y = [-0.1, 0.1]   # min max [m/s]
             ang_vel_yaw = [-0.1, 0.1]    # min max [rad/s]
             heading = [-3.14, 3.14]
+
+    
+    class sim (LeggedRobotCfg.sim):
+        dt = 0.005
 
     class rewards(LeggedRobotCfg.rewards):
         soft_dof_pos_limit = 1.0
@@ -143,13 +149,14 @@ class NaoCfg( LeggedRobotCfg ):
             dof_acc = 0.
             lin_vel_z = 0.
             dof_acc = 0.#2.e-7
-            lin_vel_z = -0.5
+            lin_vel_z = 0.#-0.5
             feet_air_time = 5.
-            dof_pos_limits = -1.
+            dof_pos_limits = 0.#-1.
             no_fly = 0.25
             dof_vel = -0.0
             ang_vel_xy = -0.0
             feet_contact_forces = -0.
+            action_rate = 0.
 
         x= """
         soft_dof_pos_limit = 0.0
@@ -188,8 +195,10 @@ class NaoCfg( LeggedRobotCfg ):
 class NaoCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
+        learning_rate = 5e-4
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'nao'
+        max_iterations = 1500
 
 
