@@ -119,7 +119,7 @@ class LeggedRobot(BaseTask):
         self.base_lin_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
-        self.projected_gravity_accel[:] = quat_rotate(self.base_quat, self.gravity_accel)
+        self.projected_gravity_accel[:] = quat_rotate_inverse(self.base_quat, self.gravity_accel)
 
         self._post_physics_step_callback()
 
@@ -539,7 +539,7 @@ class LeggedRobot(BaseTask):
         self.base_lin_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
         self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
-        self.projected_gravity_accel = quat_rotate(self.base_quat, self.gravity_accel)
+        self.projected_gravity_accel = quat_rotate_inverse(self.base_quat, self.gravity_accel)
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
