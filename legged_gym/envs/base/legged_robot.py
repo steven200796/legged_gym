@@ -387,7 +387,9 @@ class LeggedRobot(BaseTask):
         Args:
             env_ids (List[int]): Environemnt ids
         """
-        self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
+
+        #self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
+        self.dof_pos[env_ids] = self.init_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
         self.dof_vel[env_ids] = 0.
 
         env_ids_int32 = env_ids.to(dtype=torch.int32)
@@ -547,18 +549,18 @@ class LeggedRobot(BaseTask):
 
         # joint positions offsets and PD gains
         self.default_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.init_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+
         self.p_gains[:] = self.cfg.control.stiffness['joint']
         self.d_gains[:] = self.cfg.control.damping['joint']
         for i in range(self.num_dofs):
             name = self.dof_names[i]
             angle = 0
-            if self.cfg.init_state.use_halfway:
-                angle = 0.5 * (self.dof_pos_limits[i, 1] + self.dof_pos_limits[i, 0])
-            else:
-                angle = self.cfg.init_state.default_joint_angles[name]
-#            if torch.isnan(angle):
-#                angle = 0
-            self.default_dof_pos[i] = angle
+
+            self.default_dof_pos[i] = 0.5 * (self.dof_pos_limits[i, 1] + self.dof_pos_limits[i, 0])
+            self.init_dof_pos[i] = self.default_dof_pos[i]
+            if not self.cfg.init_state.use_halfway:
+                self.init_dof_pos[i] = self.cfg.init_state.default_joint_angles[name]
             for dof_tag in self.cfg.control.stiffness.keys():
                 if dof_tag in name:
                     self.p_gains[i] = self.cfg.control.stiffness[dof_tag]
