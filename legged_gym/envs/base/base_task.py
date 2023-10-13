@@ -98,6 +98,7 @@ class BaseTask():
             self.gym.subscribe_viewer_keyboard_event(
                 self.viewer, gymapi.KEY_V, "toggle_viewer_sync")
 
+
     def get_observations(self):
         return self.obs_buf
     
@@ -119,8 +120,6 @@ class BaseTask():
 
     def render(self, sync_frame_time=True):
         # fetch results
-        if self.device != 'cpu':
-            self.gym.fetch_results(self.sim, True)
         if self.viewer:
             # check for window closed
             if self.gym.query_viewer_has_closed(self.viewer):
@@ -132,6 +131,9 @@ class BaseTask():
                     sys.exit()
                 elif evt.action == "toggle_viewer_sync" and evt.value > 0:
                     self.enable_viewer_sync = not self.enable_viewer_sync
+
+            if self.device != 'cpu':
+                self.gym.fetch_results(self.sim, True)
 
             # step graphics
             if self.enable_viewer_sync:
