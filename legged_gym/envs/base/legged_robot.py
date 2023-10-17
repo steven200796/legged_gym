@@ -217,12 +217,23 @@ class LeggedRobot(BaseTask):
         """
         self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
                                     self.base_ang_vel  * self.obs_scales.ang_vel,
-                                    (self.accel_tensor[:,:3] / self.masses) + self.projected_gravity_accel,
+#                                    self.projected_gravity,
+                                    ((self.accel_tensor[:,:3] / self.masses) + self.projected_gravity_accel) * 0.1,
                                     self.commands[:, :3] * self.commands_scale,
                                     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                     self.dof_vel * self.obs_scales.dof_vel,
                                     self.actions
                                     ),dim=-1)
+        if False:
+            print()
+            print("My velocities:", self.base_lin_vel, self.base_lin_vel * self.obs_scales.lin_vel)
+            print("My ang velocities:", self.base_ang_vel, self.base_ang_vel  * self.obs_scales.ang_vel)
+            print("My accelerations:", (self.accel_tensor[:,:3] / self.masses) + self.projected_gravity_accel, ((self.accel_tensor[:,:3] / self.masses) + self.projected_gravity_accel) * 0.1)
+            print("My commands:",self.commands[:,:3], self.commands[:, :3] * self.commands_scale) 
+            print("My dof positions:", self.dof_pos - self.default_dof_pos, (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos)
+            print("My dof velocities:", self.dof_vel, self.dof_vel * self.obs_scales.dof_vel)
+            print("My prev actions", self.actions)
+        
         # add perceptive inputs if not blind
         if self.cfg.terrain.measure_heights:
             heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
@@ -309,6 +320,7 @@ class LeggedRobot(BaseTask):
                 r = self.dof_pos_limits[i, 1] - self.dof_pos_limits[i, 0]
                 self.dof_pos_limits[i, 0] = m - 0.5 * r * self.cfg.rewards.soft_dof_pos_limit
                 self.dof_pos_limits[i, 1] = m + 0.5 * r * self.cfg.rewards.soft_dof_pos_limit
+                print(self.dof_names[i], self.dof_pos_limits[i,0], self.dof_pos_limits[i,1], self.dof_vel_limits[i], self.torque_limits[i], f"Expected Gain {self.dof_names[i]}: {2 * self.torque_limits[i] / (self.dof_pos_limits[i,0] - self.dof_pos_limits[i,1])}")
         return props
 
     def _process_rigid_body_props(self, props, env_id):
@@ -351,7 +363,7 @@ class LeggedRobot(BaseTask):
         self.commands[env_ids, 1] = torch_rand_float(self.command_ranges["lin_vel_y"][0], self.command_ranges["lin_vel_y"][1], (len(env_ids), 1), device=self.device).squeeze(1)
         if self.cfg.commands.heading_command:
             self.commands[env_ids, 3] = torch_rand_float(self.command_ranges["heading"][0], self.command_ranges["heading"][1], (len(env_ids), 1), device=self.device).squeeze(1)
-        else:
+        else:            
             self.commands[env_ids, 2] = torch_rand_float(self.command_ranges["ang_vel_yaw"][0], self.command_ranges["ang_vel_yaw"][1], (len(env_ids), 1), device=self.device).squeeze(1)
 
         # set small commands to zero
@@ -390,8 +402,7 @@ class LeggedRobot(BaseTask):
             env_ids (List[int]): Environemnt ids
         """
 
-        #self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
-        self.dof_pos[env_ids] = self.init_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
+        self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
         self.dof_vel[env_ids] = 0.
 
         env_ids_int32 = env_ids.to(dtype=torch.int32)

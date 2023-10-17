@@ -179,10 +179,10 @@ class LeggedRobotCfg(BaseConfig):
     class viewer:
         ref_env = 0
         pos = [10, 0, 6]  # [m]
-        lookat = [11., 5, 3.]  # [m]
+        lookat = [0., 0., 0.]  # [m]
 
     class sim:
-        dt =  0.005
+        dt = 0.005
         substeps = 1
         gravity = [0., 0. ,-9.81]  # [m/s^2]
         up_axis = 1  # 0 is y, 1 is z

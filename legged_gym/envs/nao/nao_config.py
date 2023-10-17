@@ -38,8 +38,8 @@ class NaoCfg( LeggedRobotCfg ):
         num_observations = 78
         episode_length_s = 20
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.32] # x,y,z [m]
-        use_halfway = True
+        pos = [0.0, 0.0, 0.30] # x,y,z [m]
+        use_halfway = False
         default_joint_angles = { # = target angles [rad] when action = 0.0
                                 'HeadYaw': 0.0,
                                 'HeadPitch': 0.0,
@@ -68,7 +68,36 @@ class NaoCfg( LeggedRobotCfg ):
                                 'LAnklePitch': 0.349,
                                 'LAnkleRoll': 0.0,
                                 }
+        default_joint_angles = { # = target angles [rad] when action = 0.0
+                                'HeadYaw': 0.0,
+                                'HeadPitch': 0.0,
+
+                                'LShoulderPitch': 0,
+                                'LShoulderRoll': 0,
+                                'LElbowYaw': 0,
+                                'LElbowRoll': 0,
+
+                                'RShoulderPitch': 0,
+                                'RShoulderRoll': 0,
+                                'RElbowYaw': 0,
+                                'RElbowRoll': 0,
+
+                                'RHipYawPitch': 0.0,
+                                'RHipRoll': 0.0,
+                                'RHipPitch': 0.,
+                                'RKneePitch': 0.,
+                                'RAnklePitch': 0.0,
+                                'RAnkleRoll': 0.0,
+
+                                'LHipYawPitch': 0.0,
+                                'LHipRoll': 0.0,
+                                'LHipPitch': 0,
+                                'LKneePitch': 0,
+                                'LAnklePitch': 0,
+                                'LAnkleRoll': 0.0,
+                                }
     class terrain( LeggedRobotCfg.terrain):
+#        mesh_type='trimesh'
         mesh_type = 'plane'
         measure_heights= False
 
@@ -103,7 +132,7 @@ class NaoCfg( LeggedRobotCfg ):
     class noise ( LeggedRobotCfg.noise ):
         add_noise = True
         noise_level = 1.0 # scales other values
-        class noise_scales:
+        class noise_scales (LeggedRobotCfg.noise.noise_scales):
             dof_pos = 0.01
             dof_vel = 0.1
             lin_vel = 0.03
@@ -118,6 +147,7 @@ class NaoCfg( LeggedRobotCfg ):
 #        penalize_contacts_on = ["Knee", "Elbow"]
         terminate_after_contacts_on = ['Hip', 'Thigh', 'Shoulder', 'Pelvis', 'Head', 'Finger', 'Elbow', 'Knee', 'Thumb', 'ForeArm', 'Tibia', 'Bicep', 'Neck', 'gripper', 'Bumper', 'Hand', 'Chest']
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+
     class commands (LeggedRobotCfg.commands):
         curriculum = True
         max_curriculum = 4.
@@ -125,7 +155,7 @@ class NaoCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges (LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [0.0, 0.5] # min max [m/s]
+            lin_vel_x = [-0.5, 0.5] # min max [m/s]
             lin_vel_y = [-0.1, 0.1]   # min max [m/s]
             ang_vel_yaw = [-0.1, 0.1]    # min max [rad/s]
             heading = [-3.14, 3.14]
