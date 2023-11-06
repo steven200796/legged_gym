@@ -2,6 +2,8 @@ import torch
 from typing import Tuple, Dict
 from legged_gym.envs import LeggedRobot
 
+
+#class Nao(LeggedRobot):
 class Nao(LeggedRobot):
     def _reward_no_fly(self):
         contacts = self.contact_forces[:, self.feet_indices, 2] > 0.1
