@@ -47,10 +47,7 @@ from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_fl
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
-import faulthandler
-faulthandler.enable()
-
-class MultiAgent(BaseTask):
+class DribbleBot(BaseTask):
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
         """ Parses the provided config file,
             calls create_sim() (which creates, simulation, terrain and environments),
@@ -126,6 +123,10 @@ class MultiAgent(BaseTask):
         self.base_ang_vel[:] = quat_rotate_inverse(self.base_quat, self.root_states[self.robot_actor_idxs, 10:13])
         self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
         self.projected_gravity_accel[:] = quat_rotate_inverse(self.base_quat, self.gravity_accel)
+
+        self.ball_pos = self.root_states[self.ball_actor_idxs, 0:3]
+        self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
+        self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
 
         self._post_physics_step_callback()
 
@@ -236,9 +237,10 @@ class MultiAgent(BaseTask):
                                     self.commands[:, :3] * self.commands_scale,
                                     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                     self.dof_vel * self.obs_scales.dof_vel,
-                                    self.actions
+                                    self.actions,
+                                    self.ball_pos - self.base_pos,
+                                    self.ball_lin_vel * self.obs_scales.lin_vel
                                     ),dim=-1)
-        
         # add perceptive inputs if not blind
         if self.cfg.terrain.measure_heights:
             heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
@@ -406,7 +408,6 @@ class MultiAgent(BaseTask):
             env_ids (List[int]): Environemnt ids
         """
         actor_ids = env_ids.detach().clone()
-#        print(self.dof_pos.shape, (self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)).shape)
         self.dof_pos[actor_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(actor_ids), self.num_dof), device=self.device)
         self.dof_vel[actor_ids] = 0.
 
@@ -435,6 +436,14 @@ class MultiAgent(BaseTask):
         # base velocities
         self.root_states[actor_ids, 7:13] = torch_rand_float(-0.5, 0.5, (len(env_ids), 6), device=self.device) # [7:10]: lin vel, [10:13]: ang vel
         actor_ids_int32 = actor_ids.to(dtype=torch.int32)
+
+
+        ball_idxs = self.ball_actor_idxs[env_ids]
+        self.root_states[ball_idxs, :3] = self.env_origins[env_ids]
+        self.root_states[ball_idxs, :2] += torch_rand_float(-0.5, 0.5, (len(env_ids), 2), device=self.device)
+        self.root_states[ball_idxs, 2] = 0.08
+        self.root_states[ball_idxs, 7:13] = 0.
+        actor_ids_int32 = torch.cat((actor_ids_int32, ball_idxs.to(dtype=torch.int32)), dim=-1)
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_states),
                                                      gymtorch.unwrap_tensor(actor_ids_int32), len(actor_ids_int32))
@@ -478,6 +487,7 @@ class MultiAgent(BaseTask):
         if torch.mean(self.episode_sums["tracking_lin_vel"][env_ids]) / self.max_episode_length > 0.8 * self.reward_scales["tracking_lin_vel"]:
             self.command_ranges["lin_vel_x"][0] = np.clip(self.command_ranges["lin_vel_x"][0] - 0.5, -self.cfg.commands.max_curriculum, 0.)
             self.command_ranges["lin_vel_x"][1] = np.clip(self.command_ranges["lin_vel_x"][1] + 0.5, 0., self.cfg.commands.max_curriculum)
+
     
     def _get_noise_scale_vec(self, cfg, num_commands):
         """ Sets a vector used to scale the noise added to the observations.
@@ -508,6 +518,7 @@ class MultiAgent(BaseTask):
         i += num_commands
         noise_vec[i:i+num_commands] = 0. # previous actions
         i += num_commands
+        noise_vec[i:i+6] = 0
         if self.cfg.terrain.measure_heights:
             noise_vec[i:i+187] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
         return noise_vec
@@ -571,6 +582,11 @@ class MultiAgent(BaseTask):
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
+
+
+        self.ball_pos = self.root_states[self.ball_actor_idxs, 0:3]
+        self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
+        self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
 
         # joint positions offsets and PD gains
         self.default_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
@@ -772,9 +788,11 @@ class MultiAgent(BaseTask):
 
         self.robot_actor_handles = []
         self.object_actor_handles = []
+        self.ball_actor_handles = []
 
         self.robot_actor_idxs = []
         self.object_actor_idxs = []
+        self.ball_actor_idxs = []
 
         self.object_rigid_body_idxs = []
         self.robot_rigid_body_idxs = []
@@ -827,7 +845,7 @@ class MultiAgent(BaseTask):
                         start_pose.r = gymapi.Quat(*rotations[asset_name])
 
                     self.env_actor_offsets.append(pos)
-                    self.env_actor_rotations.append(rotations.get(asset_name, (0,0,0,1)))
+                    self.env_actor_rotations.append(rotations.get(asset_name, (0.,0.,0.,1.)))
                     
                     # todo, update randomization to be per actor instead of per environment?
                     rigid_shape_props = self._process_rigid_shape_props(self.asset_rigid_shape_props[asset_name], i)
@@ -857,17 +875,22 @@ class MultiAgent(BaseTask):
             if self.cfg.env.base_texture:
                 self._add_texture_terrain(env_handle, i)
                 self._add_goal_boxes(env_handle, i)
+                env_pos[:2] += torch_rand_float(-0.5, 0.5, (1,2), device=self.device).squeeze(0)
                 start_pose.p = gymapi.Vec3(*env_pos)
-                self.gym.create_actor(env_handle, self.ball_asset, start_pose, 'ball', i, 0, 0)
 
+                ball_handle = self.gym.create_actor(env_handle, self.ball_asset, start_pose, 'ball', i, 0, 0)
+                self.ball_actor_handles.append(ball_handle)
+                self.ball_actor_idxs.append(self.gym.get_actor_index(env_handle, ball_handle, gymapi.DOMAIN_SIM))
             self.envs.append(env_handle) 
 
 
-        self.robot_actor_idxs = torch.Tensor(self.robot_actor_idxs).to(device=self.device,dtype=torch.long)
-        self.object_actor_idxs = torch.Tensor(self.object_actor_idxs).to(device=self.device,dtype=torch.long)
-        self.object_rigid_body_idxs = torch.Tensor(self.object_rigid_body_idxs).to(device=self.device,dtype=torch.long)
+        self.robot_actor_idxs = torch.tensor(self.robot_actor_idxs, device=self.device)
+        self.object_actor_idxs = torch.tensor(self.object_actor_idxs, device=self.device)
+        self.ball_actor_idxs = torch.tensor(self.ball_actor_idxs, device=self.device)
+        print(self.ball_actor_idxs, self.robot_actor_idxs)
+        self.object_rigid_body_idxs = torch.tensor(self.object_rigid_body_idxs, device=self.device)
         self.env_actor_offsets = torch.tensor(self.env_actor_offsets, device=self.device)
-        self.env_actor_rotations = torch.tensor(self.env_actor_rotations, device=self.device, dtype=torch.float)
+        self.env_actor_rotations = torch.tensor(self.env_actor_rotations, device=self.device)
 
         self._setup_penalties_and_terminations()
 
@@ -1076,7 +1099,7 @@ class MultiAgent(BaseTask):
         # penalize torques too close to the limit
         return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
 
-    def _reward_tracking_lin_vel(self):
+    def _reward_tracking_lin_vel_old(self):
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
@@ -1119,8 +1142,13 @@ class MultiAgent(BaseTask):
 
     def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)
-        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.ball_lin_vel[:, :2]), dim=1)
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+
+    def _reward_ball_distance(self):
+        # Tracking of linear velocity commands (xy axes)
+        ball_dist_error = torch.sum(torch.square(self.ball_pos - self.base_pos), dim=1)
+        return torch.exp(-ball_dist_error/self.cfg.rewards.tracking_sigma)
 
 #todo move helpers    
 def parse_cfg_asset_options(cfg):

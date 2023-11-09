@@ -30,14 +30,14 @@
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-class NaoMultiCfg( LeggedRobotCfg ): 
+class NaoDribbleCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
-        num_envs = 256
+        num_envs = 2048
         num_actions = 22
         # TODO This is hardcoded for now but should be inferred
-        num_observations = 78
+        num_observations = 84
         episode_length_s = 20
-        env_spacing = 15
+        env_spacing = 14
         base_texture = True
         base_dims = [10, 5, 0.01]
         goal_dims = [base_dims[1] / 4, base_dims[0] / 4, 0.01]
@@ -148,7 +148,7 @@ class NaoMultiCfg( LeggedRobotCfg ):
 
     class asset( LeggedRobotCfg.asset ):
 #        positions = {'nao': [(0,0,0), (1,1,0), (0.5, 0.5, 0), (1.5, 1.5, 0)]}
-        positions = {'nao': [(-1,0,0), (-4,0,0), (-3.5,2,0), (-3,-2,0)], 'nao2': [(1,0,0), (4,0,0), (3,2,0), (3,-2,0)]}
+        positions = {'nao': [(0,0,0)]}
 #        positions = {'nao': [(-.3,0,0), (-4,0,0), (-3.5,2,0), (-3,-2,0), (0.3,0,0), (4,0,0), (3,2,0), (3,-2,0)]}
         rotations = {}
         rotations = {'nao2': (0, 0, 1, 0)}
@@ -158,7 +158,7 @@ class NaoMultiCfg( LeggedRobotCfg ):
         penalize_contacts_on = {'nao': ["Knee", "Elbow"], 'nao2': ["Knee", "Elbow"]}
         terminate_after_contacts_on = {'nao': ['Hip', 'Thigh', 'Shoulder', 'Pelvis', 'Head', 'Finger', 'Elbow', 'Knee', 'Thumb', 'ForeArm', 'Tibia', 'Bicep', 'Neck', 'gripper', 'Bumper', 'Hand', 'Chest']}
 
-        self_collisions = {'nao': 0, 'nao2': 0}
+        self_collisions = {'nao': 1, 'nao2': 1}
         terminate_heights_on = {'nao': [('head', 0.27)]}
 
         num_actors_per_env = sum([len(pos) for pos in positions.values()])
@@ -173,8 +173,8 @@ class NaoMultiCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges (LeggedRobotCfg.commands.ranges):
-            lin_vel_x = [-0.5, 0.5] # min max [m/s]
-            lin_vel_y = [-0.1, 0.1]   # min max [m/s]
+            lin_vel_x = [0., 0.5] # min max [m/s]
+            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
             ang_vel_yaw = [-0.1, 0.1]    # min max [rad/s]
             heading = [-3.14, 3.14]
 
@@ -191,16 +191,18 @@ class NaoMultiCfg( LeggedRobotCfg ):
         tracking_sigma = 0.25#0.25 # tracking reward = exp(-error^2/sigma)
         class scales( LeggedRobotCfg.rewards.scales ):
 #            termination = -200.
-            tracking_lin_vel = 1.0
-            tracking_ang_vel = 0.2
+            tracking_lin_vel = 0.5
+            ball_distance = 4.0
+#            tracking_ball_vel = 1.0
+            tracking_ang_vel = 0
             torques = -5.e-6
             dof_acc = 0.
             lin_vel_z = 0.
             dof_acc = 0.#2.e-7
             lin_vel_z = 0.#-0.5
-            feet_air_time = 5.
+            feet_air_time = 0.
             dof_pos_limits = 0.#-1.
-            no_fly = 0.25
+            no_fly = 0.
             dof_vel = -0.0
             ang_vel_xy = -0.0
             feet_contact_forces = -0.
@@ -243,7 +245,7 @@ class NaoMultiCfg( LeggedRobotCfg ):
 class NaoCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
-        learning_rate = 5e-4
+        learning_rate = 1e-3
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
         experiment_name = 'nao'
