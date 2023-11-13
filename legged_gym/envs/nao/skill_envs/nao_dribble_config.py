@@ -32,7 +32,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class NaoDribbleCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
-        num_envs = 2048
+        num_envs = 4
         num_actions = 22
         # TODO This is hardcoded for now but should be inferred
         num_observations = 84
@@ -240,7 +240,7 @@ class NaoDribbleCfg( LeggedRobotCfg ):
         push_robots = True
         push_interval_s = 10
         max_push_vel_xy = 0.1
-
+        max_ball_distance = 0.4
 
 class NaoCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):

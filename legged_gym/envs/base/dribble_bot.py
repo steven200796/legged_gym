@@ -440,7 +440,9 @@ class DribbleBot(BaseTask):
 
         ball_idxs = self.ball_actor_idxs[env_ids]
         self.root_states[ball_idxs, :3] = self.env_origins[env_ids]
-        self.root_states[ball_idxs, :2] += torch_rand_float(-0.5, 0.5, (len(env_ids), 2), device=self.device)
+        #todo flag randomization of ball here
+        #self.root_states[ball_idxs, :2] += torch_rand_float(-0.5, 0.5, (len(env_ids), 2), device=self.device)
+        self.root_states[ball_idxs, :1] += self.cfg.domain_rand.max_ball_distance
         self.root_states[ball_idxs, 2] = 0.08
         self.root_states[ball_idxs, 7:13] = 0.
         actor_ids_int32 = torch.cat((actor_ids_int32, ball_idxs.to(dtype=torch.int32)), dim=-1)
