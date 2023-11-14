@@ -588,7 +588,9 @@ class DribbleBot(BaseTask):
 
         self.ball_pos = self.root_states[self.ball_actor_idxs, 0:3]
         self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
-        self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
+#       self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
+        self.ball_lin_vel = self.root_states[self.ball_actor_idxs, 7:10]
+
 
         # joint positions offsets and PD gains
         self.default_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
