@@ -1147,11 +1147,11 @@ class DribbleBot(BaseTask):
     def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.ball_lin_vel[:, :2]), dim=1)
-        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma * 2)
 
     def _reward_ball_distance(self):
         # Tracking of linear velocity commands (xy axes)
-        ball_dist_error = torch.sum(torch.square(self.ball_pos - self.base_pos), dim=1)
+        ball_dist_error = torch.pow(torch.norm(self.ball_pos - self.base_pos, dim=-1), 2)
         return torch.exp(-ball_dist_error/self.cfg.rewards.tracking_sigma)
 
 #todo move helpers    

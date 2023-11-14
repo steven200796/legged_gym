@@ -41,7 +41,7 @@ import torch
 def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
     # override some parameters for testing
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 4)
     env_cfg.terrain.num_rows = 5
     env_cfg.terrain.num_cols = 5
     env_cfg.terrain.curriculum = False
@@ -79,8 +79,6 @@ def play(args):
     for i in range(10*int(env.max_episode_length)):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos = env.step(actions.detach())
-        if i > 2:
-            exit() 
         if RECORD_FRAMES:
             if i%2:
                 filename = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'frames', f"{img_idx}.png")
@@ -100,7 +98,6 @@ def play(args):
                     'command_x': env.commands[robot_index, 0].item(),
                     'command_y': env.commands[robot_index, 1].item(),
                     'command_yaw': env.commands[robot_index, 2].item(),
-#                    'base_vel_x': env.root_states[robot_index, 7].item(),
                     'base_vel_x': env.base_lin_vel[robot_index, 0].item(),
                     'base_vel_y': env.base_lin_vel[robot_index, 1].item(),
                     'base_vel_z': env.base_lin_vel[robot_index, 2].item(),
