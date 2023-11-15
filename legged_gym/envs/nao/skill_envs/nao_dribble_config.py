@@ -35,7 +35,7 @@ class NaoDribbleCfg( LeggedRobotCfg ):
         num_envs = 4096
         num_actions = 22
         # TODO This is hardcoded for now but should be inferred
-        num_observations = 84
+        num_observations = 81
         episode_length_s = 20
         env_spacing = 14
         base_texture = True

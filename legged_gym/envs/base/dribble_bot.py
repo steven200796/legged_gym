@@ -128,6 +128,8 @@ class DribbleBot(BaseTask):
         self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
         self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
 
+        self.ball_pos_robot_frame = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
+
         self._post_physics_step_callback()
 
         # compute observations, rewards, resets, ...
@@ -238,8 +240,7 @@ class DribbleBot(BaseTask):
                                     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                     self.dof_vel * self.obs_scales.dof_vel,
                                     self.actions,
-                                    self.ball_pos - self.base_pos,
-                                    self.ball_lin_vel * self.obs_scales.lin_vel
+                                    self.ball_pos_robot_frame
                                     ),dim=-1)
         # add perceptive inputs if not blind
         if self.cfg.terrain.measure_heights:
@@ -590,6 +591,7 @@ class DribbleBot(BaseTask):
         self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
 #       self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
         self.ball_lin_vel = self.root_states[self.ball_actor_idxs, 7:10]
+        self.ball_pos_robot_frame = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
 
 
         # joint positions offsets and PD gains
