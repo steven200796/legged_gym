@@ -47,8 +47,11 @@ from .nao.nao import Nao
 from .nao.nao_multi_config import NaoMultiCfg, NaoCfgPPO
 from .nao.nao_multi import NaoMulti
 
-from .nao.skill_envs.nao_dribble_config import NaoDribbleCfg, NaoCfgPPO
-from .nao.skill_envs.nao_dribble import NaoDribble
+from .nao.walk.nao_walk_config import NaoWalkCfg, NaoCfgPPO
+from .nao.walk.nao_walk import NaoWalk
+
+from .nao.dribble.nao_dribble_config import NaoDribbleCfg, NaoCfgPPO
+from .nao.dribble.nao_dribble import NaoDribble
 
 
 
@@ -66,4 +69,5 @@ task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO() )
 task_registry.register( "cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO() )
 task_registry.register( "nao", Nao, NaoCfg(), NaoCfgPPO() )
 task_registry.register( "nao_multi", NaoMulti, NaoMultiCfg(), NaoCfgPPO() )
+task_registry.register( "nao_walk", NaoWalk, NaoWalkCfg(), NaoCfgPPO() )
 task_registry.register( "nao_dribble", NaoDribble, NaoDribbleCfg(), NaoCfgPPO() )

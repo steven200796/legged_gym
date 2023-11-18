@@ -33,7 +33,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 class NaoCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
         num_envs = 4096
-        num_actions = 26
+        num_actions = 22
         # TODO This is hardcoded for now but should be inferred
         num_observations = 277
     class init_state( LeggedRobotCfg.init_state ):
@@ -141,6 +141,7 @@ class NaoCfg( LeggedRobotCfg ):
 #        penalize_contacts_on = ["Knee", "Elbow"]
         terminate_after_contacts_on = ['Hip', 'Thigh', 'Shoulder', 'Pelvis', 'Head', 'Finger', 'Elbow', 'Knee', 'Thumb', 'ForeArm', 'Tibia', 'Bicep', 'Neck', 'gripper', 'Bumper', 'Hand', 'Chest']
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
+        num_actors_per_env=1
     class commands:
         curriculum = False
         max_curriculum = 1.
