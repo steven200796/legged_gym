@@ -192,7 +192,7 @@ class NaoDribbleCfg( LeggedRobotCfg ):
         class scales( LeggedRobotCfg.rewards.scales ):
 #            termination = -200.
             tracking_lin_vel = 1.0
-            ball_distance = 1.0
+            ball_distance = 1.5
 #            tracking_ball_vel = 1.0
             tracking_ang_vel = 0
             torques = -5.e-6

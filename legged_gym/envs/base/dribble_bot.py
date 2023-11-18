@@ -126,7 +126,8 @@ class DribbleBot(BaseTask):
 
         self.ball_pos = self.root_states[self.ball_actor_idxs, 0:3]
         self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
-        self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
+#        self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
+        self.ball_lin_vel = self.root_states[self.ball_actor_idxs, 7:10]
 
         self.ball_pos_robot_frame = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
 
@@ -592,7 +593,6 @@ class DribbleBot(BaseTask):
 #       self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
         self.ball_lin_vel = self.root_states[self.ball_actor_idxs, 7:10]
         self.ball_pos_robot_frame = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
-
 
         # joint positions offsets and PD gains
         self.default_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
@@ -1105,7 +1105,7 @@ class DribbleBot(BaseTask):
         # penalize torques too close to the limit
         return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
 
-    def _reward_tracking_lin_vel_old(self):
+    def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
@@ -1146,14 +1146,20 @@ class DribbleBot(BaseTask):
         single_contact = torch.sum(1.*contacts, dim=1)==1
         return 1.*single_contact
 
-    def _reward_tracking_lin_vel(self):
+    def _reward_tracking_lin_vel_ball(self):
         # Tracking of linear velocity commands (xy axes)
         lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.ball_lin_vel[:, :2]), dim=1)
         return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma * 2)
 
     def _reward_ball_distance(self):
         # Tracking of linear velocity commands (xy axes)
-        ball_dist_error = torch.pow(torch.norm(self.ball_pos - self.base_pos, dim=-1), 2)
+        left_foot_idx = self.gym.find_actor_rigid_body_handle(self.envs[0], self.robot_actor_handles[0], self.cfg.asset.feet_names[self.asset_name][0])
+        left_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][0],0:3].view(self.num_envs,3)#-self.base_po)
+        delta = self.ball_pos - left_foot_pos
+#        delta_oriented = quat_rotate_inverse(self.base_quat,delta)
+
+#        print(self.ball_pos.shape, left_foot_pos.shape)
+        ball_dist_error = torch.pow(torch.norm(delta, dim=-1), 2)
         return torch.exp(-ball_dist_error/self.cfg.rewards.tracking_sigma)
 
 #todo move helpers    
