@@ -594,6 +594,12 @@ class DribbleBot(BaseTask):
         self.ball_lin_vel = self.root_states[self.ball_actor_idxs, 7:10]
         self.ball_pos_robot_frame = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
 
+#        left_foot_idx = self.gym.find_actor_rigid_body_handle(self.envs[0], self.robot_actor_handles[0], self.cfg.asset.feet_names[self.asset_name][0])
+#        right_foot_idx = self.gym.find_actor_rigid_body_handle(self.envs[0], self.robot_actor_handles[0], self.cfg.asset.feet_names[self.asset_name][1])
+        left_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][0],0:3].view(self.num_envs,3))
+        right_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][1],0:3].view(self.num_envs,3))
+
+
         # joint positions offsets and PD gains
         self.default_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.init_dof_pos = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
@@ -1153,9 +1159,10 @@ class DribbleBot(BaseTask):
 
     def _reward_ball_distance(self):
         # Tracking of linear velocity commands (xy axes)
-        left_foot_idx = self.gym.find_actor_rigid_body_handle(self.envs[0], self.robot_actor_handles[0], self.cfg.asset.feet_names[self.asset_name][0])
-        left_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][0],0:3].view(self.num_envs,3)#-self.base_po)
-        delta = self.ball_pos - left_foot_pos
+        deltaLeft = self.ball_pos - left_foot_pos
+        deltaRight = self.ball_pos - right_foot_pos
+        delta = torch.min(deltaLeft, deltaRight)
+
 #        delta_oriented = quat_rotate_inverse(self.base_quat,delta)
 
 #        print(self.ball_pos.shape, left_foot_pos.shape)
