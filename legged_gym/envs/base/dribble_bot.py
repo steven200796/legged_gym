@@ -124,12 +124,12 @@ class DribbleBot(BaseTask):
         self.projected_gravity[:] = quat_rotate_inverse(self.base_quat, self.gravity_vec)
         self.projected_gravity_accel[:] = quat_rotate_inverse(self.base_quat, self.gravity_accel)
 
-        self.ball_pos = self.root_states[self.ball_actor_idxs, 0:3]
-        self.ball_quat = self.root_states[self.ball_actor_idxs, 3:7]
+        self.ball_pos[:] = self.root_states[self.ball_actor_idxs, 0:3]
+        self.ball_quat[:] = self.root_states[self.ball_actor_idxs, 3:7]
 #        self.ball_lin_vel = quat_rotate_inverse(self.ball_quat, self.root_states[self.ball_actor_idxs, 7:10])
-        self.ball_lin_vel = self.root_states[self.ball_actor_idxs, 7:10]
+        self.ball_lin_vel[:] = self.root_states[self.ball_actor_idxs, 7:10]
 
-        self.ball_pos_robot_frame = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
+        self.ball_pos_robot_frame[:] = quat_rotate_inverse(self.base_quat, self.ball_pos - self.base_pos)
 
         self._post_physics_step_callback()
 
@@ -899,7 +899,6 @@ class DribbleBot(BaseTask):
         self.robot_actor_idxs = torch.tensor(self.robot_actor_idxs, device=self.device)
         self.object_actor_idxs = torch.tensor(self.object_actor_idxs, device=self.device)
         self.ball_actor_idxs = torch.tensor(self.ball_actor_idxs, device=self.device)
-        print(self.ball_actor_idxs, self.robot_actor_idxs)
         self.object_rigid_body_idxs = torch.tensor(self.object_rigid_body_idxs, device=self.device)
         self.env_actor_offsets = torch.tensor(self.env_actor_offsets, device=self.device)
         self.env_actor_rotations = torch.tensor(self.env_actor_rotations, device=self.device)
