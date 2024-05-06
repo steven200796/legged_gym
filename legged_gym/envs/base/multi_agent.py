@@ -51,7 +51,7 @@ import faulthandler
 faulthandler.enable()
 
 class MultiAgent(BaseTask):
-    def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
+    def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless, render_override):
         """ Parses the provided config file,
             calls create_sim() (which creates, simulation, terrain and environments),
             initilizes pytorch buffers used during training
@@ -70,7 +70,7 @@ class MultiAgent(BaseTask):
         self.debug_viz = False
         self.init_done = False
         self._parse_cfg(self.cfg)
-        super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
+        super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless, render_override)
 
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
@@ -232,7 +232,8 @@ class MultiAgent(BaseTask):
         """
         self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
                                     self.base_ang_vel  * self.obs_scales.ang_vel,
-                                    ((self.accel_tensor[:,:3] / self.masses) + self.projected_gravity_accel) * 0.1,
+                                    self.projected_gravity,
+                                    #((self.accel_tensor[:,:3] / self.masses) + self.projected_gravity_accel) * 0.1,
                                     self.commands[:, :3] * self.commands_scale,
                                     (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                                     self.dof_vel * self.obs_scales.dof_vel,
@@ -1089,8 +1090,10 @@ class MultiAgent(BaseTask):
     def _reward_feet_air_time(self):
         # Reward long steps
         # Need to filter the contacts because the contact reporting of PhysX is unreliable on meshes
-        contact = self.contact_forces[:, self.feet_indices.view(-1), 2].view(self.num_envs * self.num_actors_per_env, self.feet_indices.shape[1])
-        contact_filt = torch.logical_or(contact, self.last_contacts) 
+        # Need to calculate by rigid body position because NAO feet has no inertial properties and thus no contact forces
+        contact = self.rigid_body_pos[:, self.feet_indices.view(-1), 2].view(self.num_envs * self.num_actors_per_env, self.feet_indices.shape[1])
+        contact_filt = torch.logical_or(contact > 0.1, self.last_contacts) 
+        print(contact)
         self.last_contacts = contact
         first_contact = (self.feet_air_time > 0.) * contact_filt
         self.feet_air_time += self.dt
@@ -1113,7 +1116,8 @@ class MultiAgent(BaseTask):
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) - self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
     
     def _reward_no_fly(self):
-        contacts = (self.contact_forces[:, self.feet_indices, 2]).view(self.num_envs * self.num_actors_per_env, self.feet_indices.shape[1]) > 0.1
+        #contacts = (self.contact_forces[:, self.feet_indices, 2]).view(self.num_envs * self.num_actors_per_env, self.feet_indices.shape[1]) > 0.1
+        contacts = (self.rigid_body_pos[:, self.feet_indices, 2]).view(self.num_envs * self.num_actors_per_env, self.feet_indices.shape[1]) < 0.01
         single_contact = torch.sum(1.*contacts, dim=1)==1
         return 1.*single_contact
 

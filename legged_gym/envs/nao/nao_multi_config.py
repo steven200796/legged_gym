@@ -240,7 +240,7 @@ class NaoMultiCfg( LeggedRobotCfg ):
         max_push_vel_xy = 0.1
 
 
-class NaoCfgPPO( LeggedRobotCfgPPO ):
+class NaoMultiCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
         learning_rate = 5e-4

@@ -48,7 +48,7 @@ from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
 class DribbleBot(BaseTask):
-    def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless):
+    def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless, render_override):
         """ Parses the provided config file,
             calls create_sim() (which creates, simulation, terrain and environments),
             initilizes pytorch buffers used during training
@@ -67,7 +67,7 @@ class DribbleBot(BaseTask):
         self.debug_viz = False
         self.init_done = False
         self._parse_cfg(self.cfg)
-        super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
+        super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless, render_override)
 
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
@@ -596,8 +596,8 @@ class DribbleBot(BaseTask):
 
 #        left_foot_idx = self.gym.find_actor_rigid_body_handle(self.envs[0], self.robot_actor_handles[0], self.cfg.asset.feet_names[self.asset_name][0])
 #        right_foot_idx = self.gym.find_actor_rigid_body_handle(self.envs[0], self.robot_actor_handles[0], self.cfg.asset.feet_names[self.asset_name][1])
-        left_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][0],0:3].view(self.num_envs,3))
-        right_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][1],0:3].view(self.num_envs,3))
+        left_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][0],0:3].view(self.num_envs,3)
+        right_foot_pos = self.body_states.view(self.num_envs, -1, 13)[:,self.feet_indices[0][1],0:3].view(self.num_envs,3)
 
 
         # joint positions offsets and PD gains

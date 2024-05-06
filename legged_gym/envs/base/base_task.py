@@ -37,7 +37,7 @@ import torch
 # Base class for RL tasks
 class BaseTask():
 
-    def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
+    def __init__(self, cfg, sim_params, physics_engine, sim_device, headless, render_override):
         self.gym = gymapi.acquire_gym()
 
         self.sim_params = sim_params
@@ -45,6 +45,7 @@ class BaseTask():
         self.sim_device = sim_device
         sim_device_type, self.sim_device_id = gymutil.parse_device_str(self.sim_device)
         self.headless = headless
+        self.render_override = render_override
 
         # env device is GPU only if sim is on GPU and use_gpu_pipeline=True, otherwise returned tensors are copied to CPU by physX.
         if sim_device_type=='cuda' and sim_params.use_gpu_pipeline:
@@ -54,7 +55,7 @@ class BaseTask():
 
         # graphics device for rendering, -1 for no rendering
         self.graphics_device_id = self.sim_device_id
-        if self.headless == True:
+        if self.headless == True and not self.render_override:
             self.graphics_device_id = -1
 
         self.num_envs = cfg.env.num_envs
@@ -88,13 +89,16 @@ class BaseTask():
 
         # todo: read from config
         self.enable_viewer_sync = True
+        if self.headless:
+            self.enable_viewer_sync = False
         self.viewer = None
 
         # if running with a viewer, set up keyboard shortcuts and camera
-        if self.headless == False:
+        if self.headless == False: # TODO see RENDER_MULTI or self.render_override:
             # subscribe to keyboard shortcuts
             self.viewer = self.gym.create_viewer(
                 self.sim, gymapi.CameraProperties())
+        if self.headless == False:
             self.gym.subscribe_viewer_keyboard_event(
                 self.viewer, gymapi.KEY_ESCAPE, "QUIT")
             self.gym.subscribe_viewer_keyboard_event(
@@ -122,24 +126,27 @@ class BaseTask():
 
     def render(self, sync_frame_time=True):
         # fetch results
-        if self.viewer:
-            # check for window closed
-            if self.gym.query_viewer_has_closed(self.viewer):
-                sys.exit()
-
-            # check for keyboard events
-            for evt in self.gym.query_viewer_action_events(self.viewer):
-                if evt.action == "QUIT" and evt.value > 0:
+        if self.viewer or self.render_override:
+            if self.viewer:
+                # check for window closed
+                if self.gym.query_viewer_has_closed(self.viewer):
                     sys.exit()
-                elif evt.action == "toggle_viewer_sync" and evt.value > 0:
-                    self.enable_viewer_sync = not self.enable_viewer_sync
 
-            if self.device != 'cpu':
-                self.gym.fetch_results(self.sim, True)
+                # check for keyboard events
+                for evt in self.gym.query_viewer_action_events(self.viewer):
+                    if evt.action == "QUIT" and evt.value > 0:
+                        sys.exit()
+                    elif evt.action == "toggle_viewer_sync" and evt.value > 0:
+                        self.enable_viewer_sync = not self.enable_viewer_sync
+
+#            if self.device != 'cpu': 
+            self.gym.fetch_results(self.sim, True)
 
             # step graphics
-            if self.enable_viewer_sync:
+            if self.enable_viewer_sync or self.render_override:
                 self.gym.step_graphics(self.sim)
+
+            if self.enable_viewer_sync:
                 self.gym.draw_viewer(self.viewer, self.sim, True)
                 if sync_frame_time:
                     self.gym.sync_frame_time(self.sim)

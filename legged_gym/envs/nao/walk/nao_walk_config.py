@@ -101,7 +101,7 @@ class NaoWalkCfg( LeggedRobotCfg ):
         positions = {'nao': [(0,0,0)]}
         rotations = {}
         asset_paths = {'nao': 'robots/nao/urdf/nao.urdf'}
-        feet_names = {'nao': 'Fsr'} 
+        feet_names = {'nao': 'sole'} 
         penalize_contacts_on = {'nao': []}
         terminate_after_contacts_on = {'nao': []}
         self_collisions = {'nao': 0}
@@ -162,7 +162,7 @@ class NaoWalkCfg( LeggedRobotCfg ):
         max_push_vel_xy = 0.1
 
 
-class NaoCfgPPO( LeggedRobotCfgPPO ):
+class NaoWalkCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
         learning_rate = 5e-4

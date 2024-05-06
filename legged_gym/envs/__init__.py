@@ -44,13 +44,13 @@ from .a1.a1_config import A1RoughCfg, A1RoughCfgPPO
 from .nao.nao_config import NaoCfg, NaoCfgPPO
 from .nao.nao import Nao
 
-from .nao.nao_multi_config import NaoMultiCfg, NaoCfgPPO
+from .nao.nao_multi_config import NaoMultiCfg, NaoMultiCfgPPO
 from .nao.nao_multi import NaoMulti
 
-from .nao.walk.nao_walk_config import NaoWalkCfg, NaoCfgPPO
+from .nao.walk.nao_walk_config import NaoWalkCfg, NaoWalkCfgPPO
 from .nao.walk.nao_walk import NaoWalk
 
-from .nao.dribble.nao_dribble_config import NaoDribbleCfg, NaoCfgPPO
+from .nao.dribble.nao_dribble_config import NaoDribbleCfg, NaoDribbleCfgPPO
 from .nao.dribble.nao_dribble import NaoDribble
 
 
@@ -68,6 +68,6 @@ task_registry.register( "anymal_b", Anymal, AnymalBRoughCfg(), AnymalBRoughCfgPP
 task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO() )
 task_registry.register( "cassie", Cassie, CassieRoughCfg(), CassieRoughCfgPPO() )
 task_registry.register( "nao", Nao, NaoCfg(), NaoCfgPPO() )
-task_registry.register( "nao_multi", NaoMulti, NaoMultiCfg(), NaoCfgPPO() )
-task_registry.register( "nao_walk", NaoWalk, NaoWalkCfg(), NaoCfgPPO() )
-task_registry.register( "nao_dribble", NaoDribble, NaoDribbleCfg(), NaoCfgPPO() )
+task_registry.register( "nao_multi", NaoMulti, NaoMultiCfg(), NaoMultiCfgPPO() )
+task_registry.register( "nao_walk", NaoWalk, NaoWalkCfg(), NaoWalkCfgPPO() )
+task_registry.register( "nao_dribble", NaoDribble, NaoDribbleCfg(), NaoDribbleCfgPPO() )

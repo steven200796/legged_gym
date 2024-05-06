@@ -30,18 +30,63 @@
 
 import numpy as np
 import os
-from datetime import datetime
+#from datetime import datetime
 
-import isaacgym
+#import isaacgym
 from legged_gym.envs import *
 from legged_gym.utils import get_args, task_registry
 import torch
+import subprocess
+import sys
 
-def train(args):
+import time
+import threading
+
+rollout_path = os.path.join(os.path.dirname(__file__), 'rollout.py')
+def register_task(args):
     env, env_cfg = task_registry.make_env(name=args.task, args=args)
-    ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=args.task, args=args)
+    ppo_runner, train_cfg, log_dir = task_registry.make_alg_runner(env=env, name=args.task, args=args)
+    return ppo_runner, train_cfg, log_dir
+
+def train(args, ppo_runner, train_cfg):
     ppo_runner.learn(num_learning_iterations=train_cfg.runner.max_iterations, init_at_random_ep_len=True)
+
+
+def run_subprocess(log_dir, args):
+    process = subprocess.Popen(["python", rollout_path, "--log_dir=%s"%log_dir, *args]) #stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    return process
+    # pass forward args from training
+    if debug:
+        stdout, stderr = process.communicate()
+        print("Subprocess output:", stdout.decode())
+        if process.returncode != 0:
+            print("Error:", stderr.decode())
+
+ 
+
 
 if __name__ == '__main__':
     args = get_args()
-    train(args)
+
+    ppo_runner, train_cfg, log_dir = register_task(args)
+
+    process = run_subprocess(log_dir, sys.argv[1:])
+    train(args, ppo_runner, train_cfg)
+
+    # Start the subprocess in a separate thread
+#    subprocess_thread = threading.Thread(target=run_subprocess, args=(log_dir, sys.argv[1:]))
+#    subprocess_thread.start()
+#    subprocess_thread.join()
+#    time.sleep(10)
+    process.terminate()
+    exit_code = process.wait()
+
+    # Check the exit code
+    if exit_code == 0:
+        print("Subprocess completed successfully.")
+    else:
+        print("Subprocess failed with exit code:", exit_code)
+
+
+
+
