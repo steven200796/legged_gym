@@ -40,12 +40,14 @@ import torch
 from torch import Tensor
 from typing import Tuple, Dict
 
-from legged_gym import LEGGED_GYM_ROOT_DIR
+from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_RESOURCES_DIR
 from legged_gym.envs.base.base_task import BaseTask
 from legged_gym.utils.terrain import Terrain
 from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_float
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
+
+texture_path = os.path.join(LEGGED_GYM_RESOURCES_DIR, 'textures/tiled_grass.jpg')
 
 class DribbleBot(BaseTask):
     def __init__(self, cfg: LeggedRobotCfg, sim_params, physics_engine, sim_device, headless, render_override):
@@ -824,7 +826,7 @@ class DribbleBot(BaseTask):
         #todo move to load assets
         if self.cfg.env.base_texture:
             self.base_asset = self.gym.create_box(self.sim, self.cfg.env.base_dims[0], self.cfg.env.base_dims[1], self.cfg.env.base_dims[2])
-            self.texture = self.gym.create_texture_from_file(self.sim, '../resources/textures/tiled_grass.jpg')
+            self.texture = self.gym.create_texture_from_file(self.sim, texture_path)
             y="""            f'{os.path.dirname(os.path.dirname(os.path.realpath(__file__)))}/"""
             self.terrain_actors = [None] * self.num_envs
             self.goal_actors = [None] * self.num_envs * 2
@@ -960,7 +962,9 @@ class DribbleBot(BaseTask):
             # create a grid of robots
             num_cols = np.floor(np.sqrt(self.num_envs))
             num_rows = np.ceil(self.num_envs / num_cols)
-            xx, yy = torch.meshgrid(torch.arange(-num_rows/2, num_rows/2), torch.arange(-num_cols/2, num_cols/2))
+            half_cols = num_cols // 2
+            half_rows = num_rows // 2
+            xx, yy = torch.meshgrid(torch.arange(-half_rows, half_rows + 1), torch.arange(-half_cols, half_cols + 1))
             spacing = self.cfg.env.env_spacing
             self.env_origins[:, 0] = spacing * xx.flatten()[:self.num_envs]
             self.env_origins[:, 1] = spacing * yy.flatten()[:self.num_envs]

@@ -32,7 +32,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class NaoWalkCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
-        num_envs = 2
+        num_envs = 4096
         num_actions = 22
         num_observations = 78
         episode_length_s = 20
@@ -168,7 +168,7 @@ class NaoWalkCfgPPO( LeggedRobotCfgPPO ):
         learning_rate = 5e-4
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'nao'
+        experiment_name = 'nao_walk'
         max_iterations = 1500
 
 

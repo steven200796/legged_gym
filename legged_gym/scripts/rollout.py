@@ -64,7 +64,8 @@ from isaacgym import gymapi
 SIM_FPS = 30
 VIDEO_FPS = float(10.0)
 RECORD_FREQ = SIM_FPS//VIDEO_FPS
-TERM_ITR = 50
+RECORD_S = 20
+TERM_ITR = RECORD_FREQ * RECORD_S
 #Experiment, see note below
 RECORD_MULTI = False
 
@@ -117,7 +118,7 @@ def rollout_single(env, camera_handle, policy, log_dir, env_cfg, filename, recor
     with make_tmp_dir() as frames_dir:
         obs = env.get_observations()
         #for i in range(int(env.max_episode_length)):
-        for i in range(int(100)):
+        for i in range(TERM_ITR):
  
             actions = policy(obs.detach())
             obs, _, rews, dones, infos = env.step(actions.detach())
@@ -166,9 +167,8 @@ def rollout_single(env, camera_handle, policy, log_dir, env_cfg, filename, recor
             elif i==stop_rew_log:
                 logger.print_rewards()
 
-            if record and i == TERM_ITR:
-                create_video_from_images(frames_dir, os.path.join(log_dir, filename + '.mp4'))
-                print("saving frame %d" % i)
+        if record:
+            create_video_from_images(frames_dir, os.path.join(log_dir, filename + '.mp4'))
 
 def set_env_params(env_cfg):
     # override some parameters for testing

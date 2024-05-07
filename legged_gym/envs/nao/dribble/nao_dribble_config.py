@@ -32,7 +32,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class NaoDribbleCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
-        num_envs = 1024
+        num_envs = 64
         num_actions = 22
         # TODO This is hardcoded for now but should be inferred
         num_observations = 81
@@ -192,7 +192,7 @@ class NaoDribbleCfg( LeggedRobotCfg ):
         class scales( LeggedRobotCfg.rewards.scales ):
 #            termination = -200.
             tracking_lin_vel = 1.0
-            ball_distance = 1.5
+#            ball_distance = 1.5
 #            tracking_ball_vel = 1.0
             tracking_ang_vel = 0
             torques = -5.e-6
@@ -242,13 +242,15 @@ class NaoDribbleCfg( LeggedRobotCfg ):
         max_push_vel_xy = 0.1
         max_ball_distance = 0.4
 
-class NaoCfgPPO( LeggedRobotCfgPPO ):
+class NaoDribbleCfgPPO( LeggedRobotCfgPPO ):
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
         learning_rate = 5e-4
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'nao'
+        experiment_name = 'nao_dribble'
         max_iterations = 1500
+
+class 
 
 

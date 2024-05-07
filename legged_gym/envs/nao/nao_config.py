@@ -32,12 +32,12 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 
 class NaoCfg( LeggedRobotCfg ): 
     class env( LeggedRobotCfg.env ):
-        num_envs = 4096
-        num_actions = 22
+        num_envs = 4
+        num_actions = 26
         # TODO This is hardcoded for now but should be inferred
         num_observations = 277
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.32] # x,y,z [m]
+        pos = [0.0, 0.0, 0.34] # x,y,z [m]
         use_halfway = True
         default_joint_angles = { # = target angles [rad] when action = 0.0
                                 'HeadYaw': 0.0,
@@ -110,15 +110,28 @@ class NaoCfg( LeggedRobotCfg ):
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
-        stiffness = {
+        stiffness = {           'HeadYaw': 0.75,
+                                'HeadPitch': 2.6,
+                                'HipYawPitch': 3.6,
+                                'HipRoll':5.8,
+                                'HipPitch':3.0,
+                                'KneePitch':3.5,#2.8,
+                                'AnklePitch':2.9,
+                                'AnkleRoll':5.9,
+                                'ShoulderPitch':0.65,
+                                'ShoulderRoll':2.2,
+                                'ElbowYaw':0.75,
+                                'ElbowRoll':2.1,
+                                'Finger': 0.,
+                                'Thumb': 0.,
                 'joint': 10.}  # [N*m/rad]
 
         #joint: 10
-        damping = {'joint': 0.25, "Finger": 0., "Thumb": 0.}     # [N*m*s/rad]
+        damping = {'joint': 0.1, "Finger": 0., "Thumb": 0.}     # [N*m*s/rad]
         #joint 0.25
 
         # action scale: target angle = actionScale * action + defaultAngle
-        action_scale = .1
+        action_scale = .3
         #action_scale = 0.1
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 4
@@ -135,30 +148,30 @@ class NaoCfg( LeggedRobotCfg ):
             height_measurements = 0.02
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/nao/urdf/nao.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/nao/urdf/nao_no_fingers.urdf'
+        num_actors_per_env=1
         name = "nao"
         foot_name = "ankle"
 #        penalize_contacts_on = ["Knee", "Elbow"]
         terminate_after_contacts_on = ['Hip', 'Thigh', 'Shoulder', 'Pelvis', 'Head', 'Finger', 'Elbow', 'Knee', 'Thumb', 'ForeArm', 'Tibia', 'Bicep', 'Neck', 'gripper', 'Bumper', 'Hand', 'Chest']
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
-        num_actors_per_env=1
     class commands:
-        curriculum = False
-        max_curriculum = 1.
+        curriculum = True
+        max_curriculum = 4.
         num_commands = 4 # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         resampling_time = 20. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            """
-            lin_vel_x = [-1.5, 1.5] # min max [m/s]
-            lin_vel_y = [-0.15, 0.15]   # min max [m/s]
-            ang_vel_yaw = [-0.2, 0.2]    # min max [rad/s]
+            lin_vel_x = [1.0, 1.5] # min max [m/s]
+            lin_vel_y = [-0.1, 0.1]   # min max [m/s]
+            ang_vel_yaw = [-0.1, 0.1]    # min max [rad/s]
             heading = [-3.14, 3.14]
             """
             lin_vel_x = [-0.35, 0.35] # min max [m/s]
             lin_vel_y = [-0.1, 0.1]   # min max [m/s]
             ang_vel_yaw = [-0.1, 0.1]    # min max [rad/s]
             heading = [-3.14, 3.14]
+            """
 
     class rewards(LeggedRobotCfg.rewards):
         soft_dof_pos_limit = 0.98
@@ -166,11 +179,11 @@ class NaoCfg( LeggedRobotCfg ):
         soft_torque_limit = 0.98
         max_contact_force = 300.
         only_positive_rewards = False
-        tracking_sigma = 0.25 # tracking reward = exp(-error^2/sigma)
+        tracking_sigma = 0.25#0.25 # tracking reward = exp(-error^2/sigma)
         class scales( LeggedRobotCfg.rewards.scales ):
 #            termination = -200.
             tracking_lin_vel = 1.0
-            tracking_ang_vel = 0.5
+            tracking_ang_vel = 0.3
             torques = -5.e-6
             dof_acc = 0.
             lin_vel_z = 0.
