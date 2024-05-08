@@ -104,7 +104,7 @@ class NaoWalkCfg( LeggedRobotCfg ):
         feet_names = {'nao': 'sole'} 
         penalize_contacts_on = {'nao': []}
         terminate_after_contacts_on = {'nao': []}
-        self_collisions = {'nao': 0}
+        self_collisions = {'nao': 1}
         terminate_heights_on = {'nao': [('head', 0.27)]}
 
         num_actors_per_env = sum([len(pos) for pos in positions.values()])
