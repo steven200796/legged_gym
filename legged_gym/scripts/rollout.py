@@ -118,7 +118,7 @@ def rollout_single(env, camera_handle, policy, log_dir, env_cfg, filename, recor
     with make_tmp_dir() as frames_dir:
         obs = env.get_observations()
         #for i in range(int(env.max_episode_length)):
-        for i in range(TERM_ITR):
+        for i in range(int(TERM_ITR)):
  
             actions = policy(obs.detach())
             obs, _, rews, dones, infos = env.step(actions.detach())
