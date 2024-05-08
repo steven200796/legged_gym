@@ -31,13 +31,10 @@
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
 from .base.legged_robot import LeggedRobot
 from .base.multi_agent import MultiAgent
-from .base.dribble_bot import DribbleBot 
+from .base.dribble_bot import DribbleBot
 
-from .nao.nao_config import NaoCfg, NaoCfgPPO
-from .nao.nao import Nao
-
-from .nao.nao_multi_config import NaoMultiCfg, NaoMultiCfgPPO
-from .nao.nao_multi import NaoMulti
+from .nao.game.nao_multi_config import NaoMultiCfg, NaoMultiCfgPPO
+from .nao.game.nao_multi import NaoMulti
 
 from .nao.walk.nao_walk_config import NaoWalkCfg, NaoWalkCfgPPO
 from .nao.walk.nao_walk import NaoWalk
@@ -52,7 +49,6 @@ import os
 from legged_gym.utils.task_registry import task_registry
 
 
-task_registry.register( "nao", Nao, NaoCfg(), NaoCfgPPO() )
 task_registry.register( "nao_multi", NaoMulti, NaoMultiCfg(), NaoMultiCfgPPO() )
 task_registry.register( "nao_walk", NaoWalk, NaoWalkCfg(), NaoWalkCfgPPO() )
 task_registry.register( "nao_dribble", NaoDribble, NaoDribbleCfg(), NaoDribbleCfgPPO() )

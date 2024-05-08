@@ -251,6 +251,3 @@ class NaoDribbleCfgPPO( LeggedRobotCfgPPO ):
         experiment_name = 'nao_dribble'
         max_iterations = 1500
 
-class 
-
-

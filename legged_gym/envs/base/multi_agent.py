@@ -1093,7 +1093,6 @@ class MultiAgent(BaseTask):
         # Need to calculate by rigid body position because NAO feet has no inertial properties and thus no contact forces
         contact = self.rigid_body_pos[:, self.feet_indices.view(-1), 2].view(self.num_envs * self.num_actors_per_env, self.feet_indices.shape[1])
         contact_filt = torch.logical_or(contact > 0.1, self.last_contacts) 
-        print(contact)
         self.last_contacts = contact
         first_contact = (self.feet_air_time > 0.) * contact_filt
         self.feet_air_time += self.dt
